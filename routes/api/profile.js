@@ -1,9 +1,35 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
+const passport = require('passport');
+
+// Load Profile Model
+const Profile = require('../../models/Profile');
+// Load User Profile
+const User = require('../../models/User');
 
 //@route    GET /api/profile/test
 //@desc     test profile routes
 //@access   public
 router.get('/test', (req, res) => res.json({msg: 'Profiles works'}))
+
+//@route    GET /api/profile
+//@desc     Get current users profile
+//@access   private
+router.get('/', passport.authenticate('jwt', {session: false }), (req, res) => {
+    const errors = {};
+
+    Profile.findOne({ user: req.user.id })
+        .then(profile => {
+            if(!profile){
+                console.log("Failed");
+                errors.noprofile = "There is no profile for this user";
+                return res.status(404).json(errors);
+            }
+            console.log('pass');
+            res.json(profile)
+        })
+        .catch(err => res.status(404).json(err));
+});
 
 module.exports = router;
